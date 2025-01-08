@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create or Join Room</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #262261;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    input, button {
+      margin: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      font-size: 16px;
+    }
+    input {
+      width: 200px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Create or Join Room</h1>
+  <div>
+    <button onclick="createRoom()">Create a Room</button>
+  </div>
+  <div>
+    <input type="text" id="roomCode" placeholder="Enter Room Code">
+    <button onclick="joinRoom()">Join Room</button>
+  </div>
+  <p id="message" class="error"></p>
+
+  <script>
+    async function createRoom() {
+      try {
+        const response = await fetch('/api/rooms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await response.json();
+        if (data.roomCode) {
+          // Display the room code in a pop-up
+          const roomCode = data.roomCode;
+          if (confirm(`Room created! Code: ${roomCode}\nClick OK to copy the code.`)) {
+            // Copy room code to clipboard
+            navigator.clipboard.writeText(roomCode).then(() => {
+              alert('Room code copied to clipboard!');
+            }).catch(() => {
+              alert('Failed to copy room code. Please copy it manually.');
+            });
+          }
+          // Redirect to the game waiting room
+          window.location.href = `/game.html?room=${roomCode}`;
+        }
+      } catch (err) {
+        document.getElementById('message').textContent = 'Error creating room.';
+      }
+    }
+
+    async function joinRoom() {
+      const roomCode = document.getElementById('roomCode').value.trim();
+      if (!roomCode) {
+        document.getElementById('message').textContent = 'Please enter a room code.';
+        return;
+      }
+      try {
+        const response = await fetch(`/api/rooms/${roomCode}`);
+        if (response.status === 200) {
+          window.location.href = `/game.html?room=${roomCode}`;
+        } else {
+          document.getElementById('message').textContent = 'Room not found. Create a new room.';
+        }
+      } catch (err) {
+        document.getElementById('message').textContent = 'Error joining room.';
+      }
+    }
+  </script>
+</body>
+</html>
