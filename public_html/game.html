@@ -146,7 +146,7 @@
       <div id="game-over-buttons" >
         <button id="restart-button">Restart</button>
         
-        <button id="quitGame">Quit</button>
+        <button id="quitGame">Έξοδος</button>
     </div>
       <br>
     </div>
@@ -447,7 +447,7 @@
     
     // Redirect to menu
     document.getElementById('restart-button').addEventListener('click', function () {
-      board = JSON.parse('[["X","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","O"]]');
+      board = JSON.parse('[["X","-","-","-","-","-","O"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["O","-","-","-","-","-","X"]]');
       currentPlayer = PLAYER_ONE;
       updateBoardDB("in_progress");
       location.reload(); // Επαναφορτώνει τη σελίδα
