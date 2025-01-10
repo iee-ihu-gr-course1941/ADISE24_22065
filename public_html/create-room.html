@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create or Join Room</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #262261;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    input, button {
+      margin: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      font-size: 16px;
+    }
+    input {
+      width: 200px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Create or Join Room</h1>
+  <div id="userGreeting"></div> <!-- Εμφάνιση ονόματος χρήστη -->
+  <div>
+    <button id="createRoomButton" onclick="createRoom()">Create Room</button>
+    <p id="message"></p>
+  </div>
+  <div>
+    <input type="text" id="roomCode" placeholder="Enter Room Code">
+    <button onclick="joinRoom()">Join Room</button>
+  </div>
+  <p id="message" class="error"></p>
+
+  <!-- Βεβαιωθείτε ότι η jQuery φορτώνεται πριν από τους custom script κώδικες -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      const userGreeting = $('#userGreeting');
+
+      // AJAX request για να πάρουμε το username
+      $.ajax({
+          url: './api/getusername.php',
+          type: 'GET', // Χρήση GET για λήψη δεδομένων
+          success: function (response) {
+              const data = JSON.parse(response); // Μετατροπή JSON απόκρισης σε αντικείμενο
+              if (data.username) {
+                  userGreeting.text(`Welcome, ${data.username}!`);
+              } else {
+                  userGreeting.text('Welcome, Player!');
+              }
+          },
+          error: function (xhr, status, error) {
+              console.error('Error fetching username:', error);
+              userGreeting.text('Welcome, Player!');
+          }
+      });
+    });
+
+    function createRoom() {
+        $.ajax({
+            url: './api/create_room.php',
+            type: 'POST',
+            data: {},
+            success: function () {
+                window.location.href = './game.html';
+            },
+            error: function (xhr, status, error) {
+                console.error('Error starting game:', error);
+            }
+        });
+    }
+
+    function joinRoom() {
+        const room_id = document.getElementById('roomCode').value.trim();
+
+        $.ajax({
+            url: './api/join_room.php',
+            type: 'POST',
+            data: {room_id: room_id},
+            success: function () {
+                window.location.href = './game.html';
+            },
+            error: function (xhr, status, error) {
+                console.error('Error starting game:', error);
+            }
+        });
+    }
+    
+  </script>
+</body>
+</html>
