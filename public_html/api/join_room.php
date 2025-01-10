@@ -36,7 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $roomid = $_POST['room_id'];
-
+    $_SESSION['roomid'] = $roomid;
+    
     $roomcodeql = "UPDATE rooms_game_state
     SET player_two = '$playerTwo' WHERE room_id = '$roomid' ";
     $conn->query($roomcodeql);

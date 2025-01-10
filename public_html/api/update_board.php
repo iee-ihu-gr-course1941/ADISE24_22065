@@ -37,10 +37,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $roomid = $_SESSION['roomid'];
     $player = $_SESSION['username'];
    
-
+   
+    if (!isset($_POST['newboard'])) {
+        echo json_encode(['error' => 'Winner not specified.']);
+        exit;
+    }
+    $newboard = $_POST['newboard'];
     
-    $roomcodeql = "SELECT * FROM rooms_game_state
-                    WHERE room_id = '$roomid'";
+    if (!isset($_POST['current_turn'])) {
+        echo json_encode(['error' => 'Winner not specified.']);
+        exit;
+    }
+    $current_turn = $_POST['current_turn'];
+    
+     if (!isset($_POST['status'])) {
+        echo json_encode(['error' => 'Winner not specified.']);
+        exit;
+    }
+    $status = $_POST['status'];
+    
+    
+    
+    $roomcodeql = "UPDATE rooms_game_state SET board_state = '$newboard', current_turn = '$current_turn', status = '$status'
+                WHERE room_id = '$roomid'";
+    
     $result = $conn->query($roomcodeql);
     
     if (!$result) {

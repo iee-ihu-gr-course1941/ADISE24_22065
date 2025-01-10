@@ -1,5 +1,7 @@
 $(document).ready(function () {
     let room;
+    const code_of_room = $('#code_of_room');
+    
     $.ajax({
         url: '../api/get_room.php',
         method: 'POST',
@@ -7,8 +9,10 @@ $(document).ready(function () {
             response = JSON.parse(response);
             if (response.success) {
                 room = response.room;
+                code_of_room.text(`Κωδικός Δωματίου: ${room.room_id}`);
                 // console.log(response.room)
             } else {
+                code_of_room.text('Κωδικός Δωματίου : δεν εμφανίζεται..');
                 // window.location.href = './create_room.html';
                 console.error('Error abandoning the game. Please try again.');
             }
@@ -23,6 +27,7 @@ $(document).ready(function () {
     const board = Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
     
     console.log(room.room.board_state)
+    
     console.log(board)
     
     // Παίκτες
@@ -164,57 +169,57 @@ $(document).ready(function () {
     // isGameOver();
     
     
-    const boardElement = document.getElementById("board");
-    const playerIndicator = document.getElementById("player-indicator"); // Για την ενημέρωση της σειράς
+    // const boardElement = document.getElementById("board");
+    // const playerIndicator = document.getElementById("player-indicator"); // Για την ενημέρωση της σειράς
     
-    // Ενημέρωση πλέγματος στον browser
-    function renderBoard() {
-      boardElement.innerHTML = "";
+    // // Ενημέρωση πλέγματος στον browser
+    // function renderBoard() {
+    //   boardElement.innerHTML = "";
     
-      for (let x = 0; x < boardSize; x++) {
-        for (let y = 0; y < boardSize; y++) {
-          const cell = document.createElement("div");
-          cell.classList.add("cell");
-          cell.dataset.x = x;
-          cell.dataset.y = y;
+    //   for (let x = 0; x < boardSize; x++) {
+    //     for (let y = 0; y < boardSize; y++) {
+    //       const cell = document.createElement("div");
+    //       cell.classList.add("cell");
+    //       cell.dataset.x = x;
+    //       cell.dataset.y = y;
     
-          if (board[x][y] === PLAYER_ONE) {
-            cell.classList.add("player1");
-            cell.textContent = "X";
-          } else if (board[x][y] === PLAYER_TWO) {
-            cell.classList.add("player2");
-            cell.textContent = "O";
-          }
+    //       if (board[x][y] === PLAYER_ONE) {
+    //         cell.classList.add("player1");
+    //         cell.textContent = "X";
+    //       } else if (board[x][y] === PLAYER_TWO) {
+    //         cell.classList.add("player2");
+    //         cell.textContent = "O";
+    //       }
     
-          cell.addEventListener("click", () => handleCellClick(x, y));
-          boardElement.appendChild(cell);
-        }
-      }
+    //       cell.addEventListener("click", () => handleCellClick(x, y));
+    //       boardElement.appendChild(cell);
+    //     }
+    //   }
     
-      // Ενημέρωση τρέχοντος παίκτη
-      playerIndicator.textContent = currentPlayer === PLAYER_ONE ? "X" : "O";
-    }
+    //   // Ενημέρωση τρέχοντος παίκτη
+    //   playerIndicator.textContent = currentPlayer === PLAYER_ONE ? "X" : "O";
+    // }
     
-    let selectedPiece = null;
-    let currentPlayer = PLAYER_ONE;
+    // let selectedPiece = null;
+    // let currentPlayer = PLAYER_ONE;
     
-    function handleCellClick(x, y) {
-      if (selectedPiece) {
-        const [fromX, fromY] = selectedPiece;
-        if (movePiece(currentPlayer, fromX, fromY, x, y)) {
-          currentPlayer = currentPlayer === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
-          selectedPiece = null;
-          renderBoard();
-          if (isGameOver()) {
-            alert("Το παιχνίδι τελείωσε!");
-          }
-        } else {
-          alert("Μη έγκυρη κίνηση!");
-        }
-      } else if (board[x][y] === currentPlayer) {
-        selectedPiece = [x, y];
-      }
-    }
+    // function handleCellClick(x, y) {
+    //   if (selectedPiece) {
+    //     const [fromX, fromY] = selectedPiece;
+    //     if (movePiece(currentPlayer, fromX, fromY, x, y)) {
+    //       currentPlayer = currentPlayer === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
+    //       selectedPiece = null;
+    //       renderBoard();
+    //       if (isGameOver()) {
+    //         alert("Το παιχνίδι τελείωσε!");
+    //       }
+    //     } else {
+    //       alert("Μη έγκυρη κίνηση!");
+    //     }
+    //   } else if (board[x][y] === currentPlayer) {
+    //     selectedPiece = [x, y];
+    //   }
+    // }
     
     // Αρχική εμφάνιση πλέγματος
     //renderBoard();

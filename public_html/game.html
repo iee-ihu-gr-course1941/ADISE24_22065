@@ -106,34 +106,359 @@
       max-width: 200px;
       padding-bottom: 20px; 
     }
+    #game-over-buttons {
+    margin-top: 20px;
+    text-align: center;
+    }
+    #game-over-buttons button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 16px;
+      background-color: #45a049;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #game-over-buttons button:hover {
+      background-color: #666;
+    }
+
   </style>
 </head>
 <body>
-    <audio id="invalid-move-sound" src="./assets/error.mp3" preload="auto"></audio>
+   
   <h1>Ataxx</h1>
   <div class="container">
     <!-- Left Column: Image -->
     <div class="column left">
         <img src="red.png" alt="Left Image">
         <br>
-        <span id="red-owns">Red owns: </span> <!-- Εδώ θα εμφανίζεται ο αριθμός των τετραγώνων που κατέχει ο κόκκινος παίκτης -->
+        <span id="red-owns"></span> <!-- Εδώ θα εμφανίζεται ο αριθμός των τετραγώνων που κατέχει ο κόκκινος παίκτης -->
       </div>
 
     <!-- Center Column: Board and Player Info -->
     <div class="column center">
-      <div id="current-player">Τρέχων Παίκτης: <span id="player-indicator">X</span></div>
+        <div id="code_of_room">Κωδικός Δωματίου: XXXXX</div>
+        <br>
+      <div id="current-player">Τρέχων Παίκτης: <span id="player-indicator"></span></div>
       <div id="board"></div>
+      <div id="game-over-buttons" >
+        <button id="restart-button">Restart</button>
+        
+        <button id="quitGame">Quit</button>
+    </div>
       <br>
     </div>
-
     <!-- Right Column: Image -->
     <div class="column right">
         <img src="yellow.png" alt="Right Image">
         <br>
-        <span id="yellow-owns">Yellow owns: </span> <!-- Εδώ θα εμφανίζεται ο αριθμός των τετραγώνων που κατέχει ο κίτρινος παίκτης -->
+        <span id="yellow-owns"></span> <!-- Εδώ θα εμφανίζεται ο αριθμός των τετραγώνων που κατέχει ο κίτρινος παίκτης -->
       </div>
   </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="game.js"></script>
+  <!--<script src="game.js"></script>-->
+  <script>
+    $(document).ready(function () {
+    
+    let pause = true;
+    let room;
+    let board;
+    const code_of_room = $('#code_of_room');
+    
+    // Αρχικοποίηση πλέγματος 7x7
+    const boardSize = 7;
+    
+    const boardElement = document.getElementById("board");
+    const playerIndicator = document.getElementById("player-indicator"); // Για την ενημέρωση της σειράς
+    
+    // Παίκτες
+    const PLAYER_ONE = "X";
+    const PLAYER_TWO = "O";
+    
+    let selectedPiece = null;
+    let currentPlayer = PLAYER_ONE;
+    
+    let player = PLAYER_ONE; // Which player am i (player2 or player2) so i can controll the piecies he can move
+    
+    const redOwns = document.querySelector(".left span");
+    const yellowOwns = document.querySelector(".right span");
+
+    // Call it as soon as possible
+    getBoard();
+    const intervalId = setInterval(() => {
+        getBoard();
+    }, 700);
+    //to stop the interval 
+    //clearInterval(intervalId);
+    
+    function getBoard() {
+        $.ajax({
+        url: '../api/get_room.php',
+        method: 'POST',
+        success: function (response) {
+            response = JSON.parse(response);
+            if (response.success) {
+                room = response.room;
+                
+                board_state = JSON.parse(response.room.board_state);
+                
+                board = board_state.map(row =>
+                    row.map(cell =>
+                        cell === "X" ? "X" : (cell === "O" ? "O" : null)
+                    )
+                );
+                
+                code_of_room.text(`Κωδικός Δωματίου: ${room.room_id}`);
+                
+                // console.log(room)
+                
+                currentPlayer = room.current_turn === "player_one"? PLAYER_ONE: PLAYER_TWO;
+                pause = room.player_two == null;
+                player = response.username == room.player_one? PLAYER_ONE: PLAYER_TWO;
+                
+                
+            
+                renderBoard();
+            } else {
+                code_of_room.text('Κωδικός Δωματίου : δεν εμφανίζεται..');
+                console.error('Error abandoning the game. Please try again.');
+            }
+        },
+        error: function () {
+            window.location.href = './create-room.html';
+            console.error('An error occurred while abandoning the game. Please try again.');
+        }
+    });
+    }
+    
+    
+    
+    // Λειτουργία για την καταμέτρηση των τετραγώνων που κατέχει κάθε παίκτης
+    function countPlayerSquares(player) {
+      let count = 0;
+      board.forEach(row => {
+        row.forEach(cell => {
+          if (cell === player) {
+            count++;
+          }
+        });
+      });
+      return count;
+    }
+    
+    // Ενημέρωση της οθόνης με τους αριθμούς των κατειλημμένων τετραγώνων
+    function updateOwnershipDisplay() {
+        const redCount = countPlayerSquares(PLAYER_ONE); // Αριθμός τετραγώνων για τον κόκκινο παίκτη
+        const yellowCount = countPlayerSquares(PLAYER_TWO); // Αριθμός τετραγώνων για τον κίτρινο παίκτη
+      
+        // Ενημέρωση των HTML στοιχείων με τους αριθμούς
+        document.getElementById("red-owns").textContent = `Ο παίχτης ${room.player_one} έχει ${redCount} κομμάτια`;
+        document.getElementById("yellow-owns").textContent = `Ο παίχτης ${room.player_two} έχει ${yellowCount} κομμάτια`;
+    }
+    
+    // Αρχική τοποθέτηση
+    // board[0][0] = PLAYER_ONE;
+    // board[boardSize - 1][boardSize - 1] = PLAYER_ONE;
+    // board[0][boardSize - 1] = PLAYER_TWO;
+    // board[boardSize - 1][0] = PLAYER_TWO;
+    
+    // Εμφάνιση πλέγματος
+    function printBoard() {
+      console.clear();
+      board.forEach(row => console.log(row.map(cell => cell || ".").join(" ")));
+    }
+    
+    // Έλεγχος αν μια θέση είναι έγκυρη
+    function isValidPosition(x, y) {
+      return x >= 0 && y >= 0 && x < boardSize && y < boardSize;
+    }
+    
+    // Κίνηση (αναπαραγωγή ή άλμα)
+    function movePiece(player, fromX, fromY, toX, toY) {
+      // Βεβαιώσου ότι η αρχική και τελική θέση είναι έγκυρες
+      if (!isValidPosition(fromX, fromY) || !isValidPosition(toX, toY)) {
+        console.log("Μη έγκυρη θέση.");
+        return false;
+      }
+    
+      // Έλεγχος ότι η αρχική θέση ανήκει στον παίκτη
+      if (board[fromX][fromY] !== player) {
+        console.log("Η θέση δεν ανήκει στον παίκτη.");
+        return false;
+      }
+    
+      // Έλεγχος ότι η τελική θέση είναι κενή
+      if (board[toX][toY] !== null) {
+        console.log("Η τελική θέση δεν είναι κενή.");
+        return false;
+      }
+    
+      // Υπολογισμός απόστασης
+      const dx = Math.abs(toX - fromX);
+      const dy = Math.abs(toY - fromY);
+    
+      // Αναπαραγωγή (απόσταση 1)
+      if (dx <= 1 && dy <= 1) {
+        board[toX][toY] = player;
+      }
+      // Άλμα (απόσταση 2)
+      else if (dx <= 2 && dy <= 2) {
+        board[toX][toY] = player;
+        board[fromX][fromY] = null;
+      } else {
+        console.log("Μη έγκυρη κίνηση.");
+        return false;
+      }
+    
+      // Μετατροπή γειτονικών κομματιών
+      capturePieces(player, toX, toY);
+    
+      // Ενημέρωση της οθόνης με τις αλλαγές
+      updateOwnershipDisplay();
+    
+      return true;
+    }
+    
+    // Μετατροπή γειτονικών κομματιών
+    function capturePieces(player, x, y) {
+      const directions = [
+        [-1, -1], [-1, 0], [-1, 1],
+        [0, -1],         [0, 1],
+        [1, -1], [1, 0], [1, 1]
+      ];
+    
+      directions.forEach(([dx, dy]) => {
+        const nx = x + dx;
+        const ny = y + dy;
+        if (isValidPosition(nx, ny) && board[nx][ny] !== null && board[nx][ny] !== player) {
+          board[nx][ny] = player;
+        }
+      });
+    }
+    
+    // Έλεγχος για τέλος παιχνιδιού
+    function isGameOver() {
+      let playerOneCount = 0;
+      let playerTwoCount = 0;
+      let emptyCount = 0;
+    
+      board.forEach(row => row.forEach(cell => {
+        if (cell === PLAYER_ONE) playerOneCount++;
+        else if (cell === PLAYER_TWO) playerTwoCount++;
+        else emptyCount++;
+      }));
+    
+      if (emptyCount === 0 || playerOneCount === 0 || playerTwoCount === 0) {
+        console.log("Το παιχνίδι τελείωσε!");
+        console.log(`Παίκτης 1: ${playerOneCount}, Παίκτης 2: ${playerTwoCount}`);
+        return true;
+      }
+      return false;
+    }
+    
+    // Παράδειγμα χρήσης
+    // printBoard();
+    // movePiece(PLAYER_ONE, 0, 0, 1, 1); // Αναπαραγωγή
+    // printBoard();
+    // movePiece(PLAYER_TWO, boardSize - 1, 0, boardSize - 3, 2); // Άλμα
+    // printBoard();
+    // isGameOver();
+    
+    function updateBoardDB(status) {
+        $.ajax({
+        url: '../api/update_board.php',
+        method: 'POST',
+        data: {
+                newboard: JSON.stringify(board),
+                current_turn: currentPlayer == PLAYER_ONE? "player_one": "player_two",
+                status: status
+        },
+        success: function (response) {
+            renderBoard();
+            
+        },
+        error: function () {
+            console.error('An error occurred while abandoning the game. Please try again.');
+        }
+        });
+    }
+    
+    
+    // Ενημέρωση πλέγματος στον browser
+    function renderBoard() {
+      boardElement.innerHTML = "";
+    
+      for (let x = 0; x < boardSize; x++) {
+        for (let y = 0; y < boardSize; y++) {
+          const cell = document.createElement("div");
+          cell.classList.add("cell");
+          cell.dataset.x = x;
+          cell.dataset.y = y;
+    
+          if (board[x][y] === PLAYER_ONE) {
+            cell.classList.add("player1");
+            cell.textContent = "X";
+          } else if (board[x][y] === PLAYER_TWO) {
+            cell.classList.add("player2");
+            cell.textContent = "O";
+          }
+    
+          cell.addEventListener("click", () => handleCellClick(x, y));
+          boardElement.appendChild(cell);
+        }
+      }
+    
+      // Ενημέρωση τρέχοντος παίκτη
+      playerIndicator.textContent = currentPlayer === PLAYER_ONE ? "X" : "O";
+      
+      updateOwnershipDisplay();
+    }
+    
+    
+    
+    function handleCellClick(x, y) {
+        if (pause) return;
+        if (currentPlayer != player) return;
+        if (selectedPiece) {
+            const [fromX, fromY] = selectedPiece;
+            if (movePiece(currentPlayer, fromX, fromY, x, y)) {
+                
+
+              currentPlayer = currentPlayer === PLAYER_ONE ? PLAYER_TWO : PLAYER_ONE;
+              selectedPiece = null;
+            //sql
+              updateBoardDB("in_progress");
+              if (isGameOver()) {
+                alert("Το παιχνίδι τελείωσε!");
+                document.getElementById("game-over-buttons").style.display = "block";
+              }
+            } else {
+              alert("Μη έγκυρη κίνηση!");
+            }
+        } else if (board[x][y] === currentPlayer) {
+            selectedPiece = [x, y];
+        }
+    }
+    
+    // Αρχική εμφάνιση πλέγματος
+    // renderBoard();
+    
+    // Redirect to menu
+    document.getElementById('restart-button').addEventListener('click', function () {
+      board = JSON.parse('[["X","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","-"],["-","-","-","-","-","-","O"]]');
+      currentPlayer = PLAYER_ONE;
+      updateBoardDB("in_progress");
+      location.reload(); // Επαναφορτώνει τη σελίδα
+    });
+    document.getElementById('quitGame').addEventListener('click', function () {
+        window.location.href = "create-room.html"; // Ανακατεύθυνση σε άλλη σελίδα
+    });
+    
+});
+  </script>
+  
+  
 </body>
 </html>
